@@ -63,7 +63,12 @@ with ros_data["lock"]:
     available_robots = list(ros_data["fleet"].keys())
 
 if available_robots:
-    selected_robot = st.sidebar.selectbox("Select Target AMR", available_robots)
+    # Changed from selectbox to multiselect for batch dispatching
+    selected_robots = st.sidebar.multiselect(
+        "Select Target AMRs", 
+        available_robots,
+        default=available_robots[:1] if available_robots else None
+    )
     
     active_grid = st.session_state.grid
     gh, gw = len(active_grid), len(active_grid[0])
@@ -97,9 +102,16 @@ if available_robots:
     sku_name = st.sidebar.text_input("Payload SKU / Cargo", "Medical Supplies (SKU-89)")
     prio = st.sidebar.slider("SLA Dispatch Priority", min_value=1, max_value=3, value=2)
 
-    if st.sidebar.button(" DISPATCH MISSION OVER DDS", type="primary", use_container_width=True, disabled=not is_valid_point):
-        ros_node.dispatch_mission(selected_robot, dest_coords, prio, sku_name)
-        st.sidebar.success(f"Dispatched {selected_robot} ➔ {dest_coords}")
+    # Disable button if no robots are selected or point is invalid
+    can_dispatch = is_valid_point and len(selected_robots) > 0
+
+    if st.sidebar.button(" DISPATCH MISSION OVER DDS", type="primary", use_container_width=True, disabled=not can_dispatch):
+        # Loop through all selected robots to inject simultaneous missions
+        for robot in selected_robots:
+            ros_node.dispatch_mission(robot, dest_coords, prio, sku_name)
+        
+        robot_names = ", ".join(selected_robots)
+        st.sidebar.success(f"Batch Dispatched {robot_names} ➔ {dest_coords}")
 else:
     st.sidebar.warning("Launch ROS 2 nodes to enable dynamic dispatching.")
 

@@ -1,4 +1,3 @@
-from setuptools import find_packages, setup
 import os
 from glob import glob
 from setuptools import find_packages, setup
@@ -13,7 +12,6 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
     ],
     install_requires=['setuptools'],
@@ -25,8 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'amr_node = amr_coordination2.amr_node:main'
+            'amr_node = amr_coordination2.amr_node:main',
+            'collision_watchdog = amr_coordination2.collision_watchdog:main'
         ],
     },
 )
-
